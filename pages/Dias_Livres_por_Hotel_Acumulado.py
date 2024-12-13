@@ -398,9 +398,9 @@ with row1[0]:
 
     data_limite = container_datas.date_input('Data Limite', value=date.today() - timedelta(days=1) ,format='DD/MM/YYYY', key='data_limite')
 
-if st.session_state.data_escolhida!=data_limite:
+    gerar_analise = container_datas.button('Gerar Análise')
 
-    st.session_state.data_escolhida = data_limite
+if gerar_analise:
 
     # Pegando reservas que fizeram trf in até a data limite
 
