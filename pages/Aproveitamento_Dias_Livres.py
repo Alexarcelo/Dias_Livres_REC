@@ -118,6 +118,11 @@ def puxar_df_router_2():
     st.session_state.df_router_2['Data Execucao'] = pd.to_datetime(st.session_state.df_router_2['Data Execucao'])
 
     st.session_state.df_router_2['Reserva Mae'] = st.session_state.df_router_2['Reserva'].str[:10]  
+
+    reservas_com_combo = st.session_state.df_router_2.loc[st.session_state.df_router_2['Servico'].isin(list(filter(lambda x: x != '', st.session_state.df_config['Combos Flexíveis'].tolist()))), 
+                                                        'Reserva Mae'].unique()
+    
+    st.session_state.df_router_2 = st.session_state.df_router_2[~st.session_state.df_router_2['Reserva Mae'].isin(reservas_com_combo)].reset_index(drop=True) 
     
     st.session_state.df_router_2['Total Paxs'] = st.session_state.df_router_2[['Total ADT', 'Total CHD']].sum(axis=1)
 
@@ -385,14 +390,6 @@ def plotar_analises(titulo, df):
 
 st.set_page_config(layout='wide')
 
-st.session_state.base_luck = 'test_phoenix_recife'
-
-st.session_state.id_sheet = '1d3EkHqSuGgMERs_JsUsHSJ83od91Un7DfINFtsFs8yM'
-
-st.session_state.aba_sheet = 'Configurações Recife'
-
-st.session_state.titulo = 'Aproveitamento Dias Livres - Recife'
-
 if not 'df_config' in st.session_state:
 
     puxar_aba_simples(st.session_state.id_sheet, st.session_state.aba_sheet, 'df_config')
@@ -403,7 +400,7 @@ if not 'mostrar_config' in st.session_state:
 
 # Títulos da página
 
-st.title(st.session_state.titulo)
+st.title(st.session_state.titulo_4)
 
 st.subheader('*apenas paxs com TRF IN*')
 
@@ -427,32 +424,36 @@ if alterar_configuracoes:
 
 row01 = st.columns(3)
 
-if st.session_state.mostrar_config == True and 'df_router_2_bruto' in st.session_state:
+if st.session_state.mostrar_config == True:
 
     with row01[0]:
 
-        filtrar_status_servico = st.multiselect('Excluir Status do Serviço', sorted(st.session_state.df_router_2_bruto['Status do Servico'].unique().tolist()), key='filtrar_status_servico', 
+        filtrar_status_servico = st.multiselect('Excluir Status do Serviço', sorted(st.session_state.df_router_bruto['Status do Servico'].dropna().unique().tolist()), key='filtrar_status_servico', 
                                                 default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Status do Serviço'].tolist())))
 
-        filtrar_status_reserva = st.multiselect('Excluir Status da Reserva', sorted(st.session_state.df_router_2_bruto['Status da Reserva'].unique().tolist()), key='filtrar_status_reserva', 
+        filtrar_status_reserva = st.multiselect('Excluir Status da Reserva', sorted(st.session_state.df_router_bruto['Status da Reserva'].unique().tolist()), key='filtrar_status_reserva', 
                                                 default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Status da Reserva'].tolist())))
+        
+        combos_flex = st.multiselect('Combo Flexível', 
+                                     sorted(st.session_state.df_router_bruto[st.session_state.df_router_bruto['Servico'].str.upper().str.contains('COMBO')]['Servico'].dropna().unique().tolist()), 
+                                     key='combos_flex', default=list(filter(lambda x: x != '', st.session_state.df_config['Combos Flexíveis'].tolist())))
 
     with row01[1]:
         
-        filtrar_servicos_in = st.multiselect('Excluir Serviços IN', sorted(st.session_state.df_router_2_bruto[st.session_state.df_router_2_bruto['Tipo de Servico']=='IN']['Servico'].unique().tolist()), 
+        filtrar_servicos_in = st.multiselect('Excluir Serviços IN', sorted(st.session_state.df_router_bruto[st.session_state.df_router_bruto['Tipo de Servico']=='IN']['Servico'].unique().tolist()), 
                                             key='filtrar_servicos_in', default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Serviços IN'].tolist())))
         
         filtrar_servicos_tt = st.multiselect('Excluir Serviços TOUR', 
-                                            sorted(st.session_state.df_router_2_bruto[st.session_state.df_router_2_bruto['Tipo de Servico'].isin(['TOUR', 'TRANSFER'])]['Servico'].unique().tolist()), 
+                                            sorted(st.session_state.df_router_bruto[st.session_state.df_router_bruto['Tipo de Servico'].isin(['TOUR', 'TRANSFER'])]['Servico'].unique().tolist()), 
                                             key='filtrar_servicos_tt', default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Serviços TOUR'].tolist())))
         
     with row01[2]:
 
-        filtrar_colunas_vazias = st.multiselect('Não Permitir Valor Vazio', sorted(st.session_state.df_router_2_bruto.columns.tolist()), key='filtrar_colunas_vazias', 
+        filtrar_colunas_vazias = st.multiselect('Não Permitir Valor Vazio', sorted(st.session_state.df_router_bruto.columns.tolist()), key='filtrar_colunas_vazias', 
                                                 default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Colunas Vazias'].tolist())))
         
         hoteis_all_inclusive = st.multiselect('Hoteis All Inclusive', 
-                                            sorted(st.session_state.df_router_2_bruto[st.session_state.df_router_2_bruto['Tipo de Servico']=='IN']['Est Destino'].dropna().unique().tolist()), 
+                                            sorted(st.session_state.df_router_bruto[st.session_state.df_router_bruto['Tipo de Servico']=='IN']['Est Destino'].dropna().unique().tolist()), 
                                             key='hoteis_all_inclusive', default=list(filter(lambda x: x != '', st.session_state.df_config['Hoteis All Inclusive'].tolist())))
         
         st.session_state.filtrar_servicos_geral = []
@@ -465,7 +466,7 @@ if st.session_state.mostrar_config == True and 'df_router_2_bruto' in st.session
 
     if salvar_config:
 
-        lista_escolhas = [filtrar_status_servico, filtrar_status_reserva, filtrar_colunas_vazias, filtrar_servicos_in, filtrar_servicos_tt, hoteis_all_inclusive]
+        lista_escolhas = [filtrar_status_servico, filtrar_status_reserva, filtrar_colunas_vazias, filtrar_servicos_in, filtrar_servicos_tt, hoteis_all_inclusive, combos_flex]
 
         st.session_state.df_config = pd.DataFrame({f'Coluna{i+1}': pd.Series(lista) for i, lista in enumerate(lista_escolhas)})
 
@@ -647,7 +648,13 @@ if 'df_salvo' in st.session_state:
 
         filtrar_servicos_analise = st.multiselect('Visualizar Apenas:', sorted(st.session_state.df_salvo['Servico'].unique().tolist()), default=None)
 
-        visualizar_all_inclusive = st.multiselect('Visualização Hoteis All Inclusive', ['Desconsiderar Hoteis All Inclusive', 'Considerar Apenas Hoteis All Inclusive'], default=None)
+        if len(list(filter(lambda x: x != '', st.session_state.df_config['Hoteis All Inclusive'].tolist())))>0:
+
+            visualizar_all_inclusive = st.multiselect('Visualização Hoteis All Inclusive', ['Desconsiderar Hoteis All Inclusive', 'Considerar Apenas Hoteis All Inclusive'], default=None)
+
+        else:
+
+            visualizar_all_inclusive = None
 
         if len(filtrar_servicos_analise)>0:
 
@@ -674,7 +681,3 @@ if 'df_salvo' in st.session_state:
                 df_group_analise = ajustar_dataframe_group_mensal(df_analise)
 
                 grafico_linha_percentual(df_group_analise, 'mes/ano', 'Aproveitamento', 'Aproveitamento', 'Aproveitamento Dias Livres')
-
-
-
-
