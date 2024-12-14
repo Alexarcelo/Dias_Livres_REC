@@ -542,7 +542,7 @@ if len(st.session_state.df_final)>0:
 
             st.subheader(f'Total de dias livres dos voos selecionados = {int(total_dias_livres)}')
 
-            st.subheader(f'Total de paxs dos voos selecionados = {int(total_dias_livres)}')
+            st.subheader(f'Total de paxs dos voos selecionados = {int(total_paxs_ref)}')
 
         selected_rows_2 = plotar_tabela_servicos_no_voo(st.session_state.df_final)
 
