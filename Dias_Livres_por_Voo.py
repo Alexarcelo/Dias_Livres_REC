@@ -56,7 +56,12 @@ def puxar_dados_phoenix():
                                          (~pd.isna(st.session_state.df_router_bruto[list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Colunas Vazias'].tolist()))]).any(axis=1)) &
                                          (~st.session_state.df_router_bruto['Servico'].isin(st.session_state.filtrar_servicos_geral))].reset_index(drop=True)
 
-    st.session_state.df_router['Reserva Mae'] = st.session_state.df_router['Reserva'].str[:10]  
+    st.session_state.df_router['Reserva Mae'] = st.session_state.df_router['Reserva'].str[:10] 
+
+    reservas_com_combo = st.session_state.df_router.loc[st.session_state.df_router['Servico'].isin(list(filter(lambda x: x != '', st.session_state.df_config['Combos Flexíveis'].tolist()))), 
+                                                        'Reserva Mae'].unique()
+    
+    st.session_state.df_router = st.session_state.df_router[~st.session_state.df_router['Reserva Mae'].isin(reservas_com_combo)].reset_index(drop=True) 
     
     st.session_state.df_router['Total Paxs'] = st.session_state.df_router[['Total ADT', 'Total CHD']].sum(axis=1)
 
@@ -213,28 +218,79 @@ def recalcular_servicos_reservas_diferentes(df_in_out, data_relatorio):
 
     return df_in_out
 
+# def puxar_aba_simples(id_gsheet, nome_aba, nome_df):
+
+#     # GCP projeto onde está a chave credencial
+#     project_id = "grupoluck"
+
+#     # ID da chave credencial do google.
+#     secret_id = "cred-luck-aracaju"
+
+#     # Cria o cliente.
+#     secret_client = secretmanager.SecretManagerServiceClient()
+
+#     secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+#     response = secret_client.access_secret_version(request={"name": secret_name})
+
+#     secret_payload = response.payload.data.decode("UTF-8")
+
+#     credentials_info = json.loads(secret_payload)
+
+#     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+
+#     # Use the credentials to authorize the gspread client
+#     credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
+#     client = gspread.authorize(credentials)
+
+#     spreadsheet = client.open_by_key(id_gsheet)
+    
+#     sheet = spreadsheet.worksheet(nome_aba)
+
+#     sheet_data = sheet.get_all_values()
+
+#     st.session_state[nome_df] = pd.DataFrame(sheet_data[1:], columns=sheet_data[0])
+
+# def inserir_config(df_itens_faltantes, id_gsheet, nome_aba):
+
+#     # GCP projeto onde está a chave credencial
+#     project_id = "grupoluck"
+
+#     # ID da chave credencial do google.
+#     secret_id = "cred-luck-aracaju"
+
+#     # Cria o cliente.
+#     secret_client = secretmanager.SecretManagerServiceClient()
+
+#     secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+#     response = secret_client.access_secret_version(request={"name": secret_name})
+
+#     secret_payload = response.payload.data.decode("UTF-8")
+
+#     credentials_info = json.loads(secret_payload)
+
+#     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+
+#     # Use the credentials to authorize the gspread client
+#     credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
+#     client = gspread.authorize(credentials)
+    
+#     spreadsheet = client.open_by_key(id_gsheet)
+
+#     sheet = spreadsheet.worksheet(nome_aba)
+
+#     sheet.batch_clear(["A2:Z100"])
+
+#     data = df_itens_faltantes.values.tolist()
+#     sheet.update('A2', data)
+
+#     st.success('Configurações salvas com sucesso!')
+
 def puxar_aba_simples(id_gsheet, nome_aba, nome_df):
 
-    # GCP projeto onde está a chave credencial
-    project_id = "grupoluck"
-
-    # ID da chave credencial do google.
-    secret_id = "cred-luck-aracaju"
-
-    # Cria o cliente.
-    secret_client = secretmanager.SecretManagerServiceClient()
-
-    secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
-    response = secret_client.access_secret_version(request={"name": secret_name})
-
-    secret_payload = response.payload.data.decode("UTF-8")
-
-    credentials_info = json.loads(secret_payload)
-
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-
-    # Use the credentials to authorize the gspread client
-    credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
+    nome_credencial = st.secrets["CREDENCIAL_SHEETS"]
+    credentials = service_account.Credentials.from_service_account_info(nome_credencial)
+    scope = ['https://www.googleapis.com/auth/spreadsheets']
+    credentials = credentials.with_scopes(scope)
     client = gspread.authorize(credentials)
 
     spreadsheet = client.open_by_key(id_gsheet)
@@ -247,26 +303,10 @@ def puxar_aba_simples(id_gsheet, nome_aba, nome_df):
 
 def inserir_config(df_itens_faltantes, id_gsheet, nome_aba):
 
-    # GCP projeto onde está a chave credencial
-    project_id = "grupoluck"
-
-    # ID da chave credencial do google.
-    secret_id = "cred-luck-aracaju"
-
-    # Cria o cliente.
-    secret_client = secretmanager.SecretManagerServiceClient()
-
-    secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
-    response = secret_client.access_secret_version(request={"name": secret_name})
-
-    secret_payload = response.payload.data.decode("UTF-8")
-
-    credentials_info = json.loads(secret_payload)
-
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-
-    # Use the credentials to authorize the gspread client
-    credentials = Credentials.from_service_account_info(credentials_info, scopes=scopes)
+    nome_credencial = st.secrets["CREDENCIAL_SHEETS"]
+    credentials = service_account.Credentials.from_service_account_info(nome_credencial)
+    scope = ['https://www.googleapis.com/auth/spreadsheets']
+    credentials = credentials.with_scopes(scope)
     client = gspread.authorize(credentials)
     
     spreadsheet = client.open_by_key(id_gsheet)
@@ -289,6 +329,12 @@ st.session_state.id_sheet = '1d3EkHqSuGgMERs_JsUsHSJ83od91Un7DfINFtsFs8yM'
 st.session_state.aba_sheet = 'Configurações Recife'
 
 st.session_state.titulo = 'Dias Livres por Voo - Recife'
+
+st.session_state.titulo_2 = 'Dias Livres por Hotel - Recife'
+
+st.session_state.titulo_3 = 'Dias Livres Acumulados por Hotel - Recife'
+
+st.session_state.titulo_4 = 'Aproveitamento Dias Livres - Recife'
 
 if not 'df_config' in st.session_state:
 
@@ -324,11 +370,15 @@ if st.session_state.mostrar_config == True:
 
     with row01[0]:
 
-        filtrar_status_servico = st.multiselect('Excluir Status do Serviço', sorted(st.session_state.df_router_bruto['Status do Servico'].unique().tolist()), key='filtrar_status_servico', 
+        filtrar_status_servico = st.multiselect('Excluir Status do Serviço', sorted(st.session_state.df_router_bruto['Status do Servico'].dropna().unique().tolist()), key='filtrar_status_servico', 
                                                 default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Status do Serviço'].tolist())))
 
         filtrar_status_reserva = st.multiselect('Excluir Status da Reserva', sorted(st.session_state.df_router_bruto['Status da Reserva'].unique().tolist()), key='filtrar_status_reserva', 
                                                 default=list(filter(lambda x: x != '', st.session_state.df_config['Filtrar Status da Reserva'].tolist())))
+        
+        combos_flex = st.multiselect('Combo Flexível', 
+                                     sorted(st.session_state.df_router_bruto[st.session_state.df_router_bruto['Servico'].str.upper().str.contains('COMBO')]['Servico'].dropna().unique().tolist()), 
+                                     key='combos_flex', default=list(filter(lambda x: x != '', st.session_state.df_config['Combos Flexíveis'].tolist())))
 
     with row01[1]:
         
@@ -358,7 +408,7 @@ if st.session_state.mostrar_config == True:
 
     if salvar_config:
 
-        lista_escolhas = [filtrar_status_servico, filtrar_status_reserva, filtrar_colunas_vazias, filtrar_servicos_in, filtrar_servicos_tt, hoteis_all_inclusive]
+        lista_escolhas = [filtrar_status_servico, filtrar_status_reserva, filtrar_colunas_vazias, filtrar_servicos_in, filtrar_servicos_tt, hoteis_all_inclusive, combos_flex]
 
         st.session_state.df_config = pd.DataFrame({f'Coluna{i+1}': pd.Series(lista) for i, lista in enumerate(lista_escolhas)})
 
