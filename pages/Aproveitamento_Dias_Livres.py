@@ -658,15 +658,21 @@ if 'df_salvo' in st.session_state:
 
         if len(filtrar_servicos_analise)>0:
 
-            if len(visualizar_all_inclusive)==1 and visualizar_all_inclusive[0]=='Desconsiderar Hoteis All Inclusive':
+            if visualizar_all_inclusive is not None:
 
-                df_analise = st.session_state.df_salvo_sem_all_inclusive.copy()
+                if len(visualizar_all_inclusive)==1 and visualizar_all_inclusive[0]=='Desconsiderar Hoteis All Inclusive':
 
-            elif len(visualizar_all_inclusive)==1 and visualizar_all_inclusive[0]=='Considerar Apenas Hoteis All Inclusive':
+                    df_analise = st.session_state.df_salvo_sem_all_inclusive.copy()
 
-                df_analise = st.session_state.df_salvo_apenas_all_inclusive.copy()
+                elif len(visualizar_all_inclusive)==1 and visualizar_all_inclusive[0]=='Considerar Apenas Hoteis All Inclusive':
 
-            elif len(visualizar_all_inclusive)==0:
+                    df_analise = st.session_state.df_salvo_apenas_all_inclusive.copy()
+
+                elif len(visualizar_all_inclusive)==0:
+
+                    df_analise = st.session_state.df_salvo.copy()
+
+            else:
 
                 df_analise = st.session_state.df_salvo.copy()
 
