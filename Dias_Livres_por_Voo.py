@@ -311,8 +311,6 @@ if not 'mostrar_config' in st.session_state:
 
 st.title(st.session_state.titulo)
 
-st.title(st.session_state.titulo)
-
 row0 = st.columns(1)
 
 st.divider()
